@@ -42,7 +42,7 @@ st.image(
     width=280
 )
 st.subheader(
-    "AI-Powered Hypertension Risk Screening"
+    "AI-Powered Hypertension Risk Screening for West Africa"
 )
 st.markdown(
     """
