@@ -1,7 +1,234 @@
+<div align="center">
+
+<img src="assets/hypersense_logo_light_800x240.png" alt="HyperSense Logo" width="380"/>
+
 # HyperSense
 
-HyperSense is an explainable AI-powered hypertension risk screening platform that helps individuals assess their risk of elevated blood pressure using non-invasive demographic and lifestyle information.
+### Explainable AI-Powered Hypertension Risk Screening for West Africa
 
-By combining machine learning with interpretable risk explanations and personalized recommendations, HyperSense aims to improve hypertension awareness, encourage early screening, and support preventive cardiovascular health decisions.
+[![Live App](https://img.shields.io/badge/🚀_Live_App-hypersense.streamlit.app-C1121F?style=for-the-badge)](https://hypersense.streamlit.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-0D1B2A?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10+-415A77?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![XGBoost](https://img.shields.io/badge/Model-XGBoost-415A77?style=for-the-badge)](https://xgboost.readthedocs.io)
 
-The platform is currently being developed using population-level survey data from Ghana and Benin, with future plans for adaptation and validation using Nigerian datasets as they become available.
+*Five questions. No blood pressure cuff. Know your risk.*
+
+**[→ Try HyperSense Live](https://hypersense.streamlit.app)**
+
+</div>
+
+---
+
+## What Is HyperSense?
+
+HyperSense is an explainable machine learning system that estimates an individual's likelihood of hypertension using five non-invasive inputs — no clinical equipment, no blood test, no blood pressure cuff required.
+
+Given **age, sex, place of residence, education level, and tobacco use**, HyperSense returns:
+
+- A **hypertension risk tier** (High / Low)
+- A **probability estimate** of elevated blood pressure
+- A **SHAP-based explanation** of the personal factors driving the result
+- A **personalised recommendation** for preventive action
+
+> ⚠️ **HyperSense is a screening and awareness tool. It does not diagnose hypertension. All results should be confirmed with a measured blood pressure reading from a trained healthcare professional.**
+
+---
+
+## Why It Was Built
+
+Hypertension affects an estimated **30% of Nigerian adults**, yet fewer than **29% are aware** of their condition. Only 22% receive treatment. With a physician-to-patient ratio of 3.8 per 10,000 — far below the WHO recommendation — clinical screening at scale is neither feasible nor sustainable through the existing health workforce alone.
+
+Existing risk prediction tools — including the **Framingham Risk Score, ASCVD Pooled Cohort Equations, and ESH/ESC 2018 models** — were derived from predominantly Western cohorts. They may not accurately reflect the epidemiological, dietary, and demographic characteristics of West African populations.
+
+HyperSense was built to address two simultaneous gaps:
+
+1. **The tool gap** — no publicly accessible, non-invasive hypertension screener calibrated for West African populations
+2. **The data gap** — Nigeria's national health surveys collect no measured blood pressure data, a surveillance failure documented and reported as part of this project
+
+---
+
+## Data Sources
+
+HyperSense is trained on **fieldworker-measured blood pressure data** from two nationally representative surveys:
+
+| Dataset | Survey Round | Women | Men | BP Measurement |
+|---|---|---|---|---|
+| Ghana DHS 2014 | Standard DHS (DHS-7) | 9,396 | 4,388 | Fieldworker-measured |
+| Benin DHS 2017–18 | Standard DHS (DHS-7) | 15,928 | 7,595 | Fieldworker-measured |
+| **Combined** | | **~25,300** | **~12,000** | **n = 20,446 (with valid BP)** |
+
+**Label derivation:**
+```
+htn_status = 1  if  SBP ≥ 140 mmHg  OR  DBP ≥ 90 mmHg
+htn_status = 0  otherwise
+```
+
+Labels are derived exclusively from measured blood pressure values. Self-reported hypertension diagnosis was not used.
+
+**Survey weights** (`V005 / 1,000,000`) were applied during model training to ensure population-representative estimates.
+
+---
+
+## Model Performance
+
+| Metric | Value |
+|---|---|
+| Algorithm | XGBoost (tuned via RandomizedSearchCV) |
+| Training sample | n = 16,356 |
+| Test sample | n = 4,090 |
+| ROC-AUC | **0.735** |
+| Sensitivity at deployment threshold | **0.80** |
+| Specificity at deployment threshold | 0.54 |
+| Brier Score | 0.162 |
+| Deployment threshold | 0.353 |
+| Class imbalance handling | `scale_pos_weight` = 5 |
+
+**Clinical interpretation at deployment threshold:**
+- 376 / 470 hypertensives in the test set correctly flagged (80%)
+- 94 / 470 missed (20% false negative rate — acknowledged limitation)
+- 1,659 normotensives referred unnecessarily (low clinical harm — BP check only)
+- 1,961 correctly reassured
+
+Performance is consistent with published non-invasive hypertension screening models in sub-Saharan African populations (reported AUC range: 0.68–0.78).
+
+---
+
+## SHAP Explainability
+
+Every prediction includes a SHAP (SHapley Additive Explanations) explanation generated by `TreeExplainer`. Users see:
+
+- The **direction** each factor pushes their risk (increasing or decreasing)
+- The **magnitude** of each factor's contribution
+- Plain-language interpretation of the top drivers
+
+**Global feature importance ranking (SHAP):**
+1. Age *(dominant predictor)*
+2. Educational level
+3. Residence (urban/rural)
+4. Sex
+5. Tobacco use
+
+Age dominance is clinically expected and consistent with the epidemiological literature on hypertension in West Africa.
+
+---
+
+## Methodology Notes
+
+**Why not include BMI?**
+BMI was excluded from the primary model due to structural non-overlap between anthropometric and blood pressure measurement subsamples in the Benin DHS 2017–18 survey. Including BMI reduced the analytical sample from 20,446 to 7,844 observations (62% loss), introducing selection bias. BMI inclusion is planned as a secondary sensitivity analysis.
+
+**Why Ghana and Benin, not Nigeria?**
+A systematic search of all publicly available Nigerian health datasets confirmed that no nationally representative Nigerian dataset with fieldworker-measured blood pressure values currently exists. The Nigeria DHS (all rounds including 2023–24) collects only self-reported hypertension awareness. The 2023 Nigeria STEPS Survey with measured biomarkers is under validation as of mid-2026. Active data access requests are pending with authors who have contributed to blood pressure data on a large scale in recent years.
+
+**Threshold selection:**
+The deployment threshold (0.353) was selected to achieve 80% sensitivity, consistent with the clinical priority of a screening tool: minimise missed hypertensives, accept higher false positive rate.
+
+**Survey weights:**
+DHS surveys use stratified cluster sampling. Survey weights were applied during XGBoost training (`sample_weight` parameter) to ensure population-representative learning. Evaluation metrics were computed on the unweighted test set to reflect expected performance on individual users at deployment.
+
+---
+
+## Limitations
+
+| Limitation | Detail |
+|---|---|
+| Geographic generalisability | Trained on Ghanaian and Beninese adults; not validated on Nigerian data yet|
+| Age ceiling | DHS surveys sample ages 15–64; highest-risk demographic (60+) unrepresented |
+| Cross-sectional design | Screens current likelihood of hypertension, not future cardiovascular events |
+| BMI absent | Primary model excludes BMI due to subsample non-overlap |
+| Calibration | Formal isotonic calibration not completed; Brier score reported from test set |
+| Not a diagnostic tool | High-risk output does not confirm hypertension; low-risk does not exclude it |
+
+---
+
+## Roadmap
+
+- [ ] **Phase 2** — Fine-tuning on Nigerian measured BP data *(data access requests active)*
+- [ ] BMI sensitivity analysis — secondary model on n=7,844 complete-case sample
+- [ ] Formal calibration assessment (isotonic regression on dedicated holdout)
+- [ ] TRIPOD-compliant methodology write-up for peer review
+- [ ] OSF pre-registration for pilot evaluation study
+- [ ] Multilingual support — Yoruba, Hausa
+
+---
+
+## Tech Stack
+
+```
+Python 3.14.2     · Data processing and modelling
+XGBoost          · Primary classification model
+SHAP             · Explainability (TreeExplainer)
+scikit-learn     · Pipeline, preprocessing, evaluation
+pandas / numpy   · Data wrangling
+Streamlit        · Web application
+pyreadstat       · DHS .dta file ingestion
+```
+
+**Deployed on:** Streamlit Community Cloud  
+**Repository:** github.com/Phawazz/HyperSense
+
+---
+
+## Project Structure
+
+```
+HyperSense/
+├── app.py                          # Streamlit application
+├── requirements.txt
+├── assets/                         # Logo and visual assets
+├── models/                         # Trained model artifacts
+│   ├── hypersense_model.pkl
+│   ├── hypersense_explainer.pkl
+│   └── model_config.json
+└── notebooks/
+    ├── 01_extraction.ipynb         # DHS data extraction
+    ├── 02_harmonization.ipynb      # Cross-country harmonization
+    ├── 03_eda.ipynb                # Exploratory data analysis
+    └── 04_modeling.ipynb           # Model development & evaluation
+    └── 05_shap.ipynb               # SHapley Additive exPlanations
+    └── 06_deployment.ipynb         # Pre-deployment checks
+```
+
+---
+
+## Data Access
+
+The DHS datasets used in this project are publicly available upon registration at [dhsprogram.com](https://dhsprogram.com). Per DHS terms of use, raw data files are not included in this repository.
+
+---
+
+## Citation
+
+If you use HyperSense in research or build on this work:
+
+```bibtex
+@software{hypersense2026,
+  author    = {Bello, Fawaz Ariyo},
+  title     = {HyperSense: Explainable ML for Hypertension Risk Screening in West Africa},
+  year      = {2026},
+  url       = {https://github.com/Phawazz/HyperSense},
+  note      = {Trained on Ghana DHS 2014 + Benin DHS 2017--18}
+}
+```
+
+**Training data:**
+> The DHS Program. Ghana Standard DHS 2014; Benin Standard DHS 2017–18. ICF, Rockville, Maryland, USA. dhsprogram.com
+
+---
+
+## Author
+
+**Fawaz Bello**  
+Medical Student · College of Medicine, University of Ibadan  
+ML Engineer · Cardiovascular Health Journal Club B - CRIH 
+
+[![GitHub](https://img.shields.io/badge/GitHub-Phawazz-0D1B2A?style=flat&logo=github)](https://github.com/Phawazz)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Fawaz_Bello-0077B5?style=flat&logo=linkedin)](https://linkedin.com/in/fawaz-bello)
+
+---
+
+<div align="center">
+
+**HyperSense v1.0** · MIT License · For research and educational use only · Not for clinical diagnosis
+
+</div>
