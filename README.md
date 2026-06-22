@@ -2,8 +2,6 @@
 
 <img src="assets/hypersense_banner_1280x640.png" alt="HyperSense" width="720"/>
 
-# HyperSense
-
 ### Explainable AI-Powered Hypertension Risk Screening for West Africa
 
 [![Live App](https://img.shields.io/badge/🚀_Live_App-hypersense.streamlit.app-C1121F?style=for-the-badge)](https://hypersense.streamlit.app)
@@ -148,7 +146,7 @@ DHS surveys use stratified cluster sampling. Survey weights were applied during 
 - [ ] Formal calibration assessment (isotonic regression on dedicated holdout)
 - [ ] TRIPOD-compliant methodology write-up for peer review
 - [ ] OSF pre-registration for pilot evaluation study
-- [ ] Multilingual support — Yoruba, Hausa
+- [ ] Multilingual support — Yoruba, Hausa, Igbo
 
 ---
 
