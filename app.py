@@ -18,17 +18,15 @@ st.set_page_config(
 def load_artifacts():
 
     model = joblib.load(
-        "models/hypersense_xgb.pkl"
+        "models/hypersense_xgb_v11.pkl"
     )
     threshold = joblib.load(
-        "models/hypersense_threshold.pkl"
+        "models/hypersense_threshold_v11.pkl"
     )
     explainer = shap.TreeExplainer(
         model
     )
     return model, threshold, explainer
-
-model, threshold, explainer = load_artifacts()
 
 try:
     model, threshold, explainer = load_artifacts()
@@ -46,11 +44,11 @@ st.subheader(
 )
 st.markdown(
     """
-    Answer five questions.
+    Answer a few questions.
     
-    Understand your hypertension risk.
+    Identify possible risk.
     
-    Know when to act.
+    Know when to get checked.
     """
 )
 st.warning(
@@ -58,7 +56,7 @@ st.warning(
     Screening tool only.
     
     HyperSense does not diagnose hypertension.
-    Results should be confirmed with a blood pressure measurement by a healthcare professional.
+    Only a blood pressure measurement can confirm whether hypertension is present.
     """
 )
 
@@ -71,21 +69,23 @@ with left_col:
     age = st.slider(
         "Age",
         min_value=15,
-        max_value=64,
+        max_value=59,
         value=23
     )
+    
     gender = st.selectbox(
         "Sex",
         ["Male", "Female"]
     )
     
-# Right sid
-with right_col:
-
     residence = st.selectbox(
         "Residence",
         ["Urban", "Rural"]
     )
+    
+# Right sid
+with right_col:
+
     educational_level = st.selectbox(
         "Educational Level",
         [
@@ -99,6 +99,29 @@ with right_col:
         "Tobacco Use",
         ["No", "Yes"]
     )
+    
+    weight = st.number_input(
+        "Weight (kg)",
+        min_value = 20.0,
+        max_value = 250.0,
+        value = 70.0,
+        step = 0.5
+    )
+    
+    height = st.number_input(
+        "Height (cm)",
+        min_value = 100.0,
+        max_value = 250.0,
+        value = 170.0,
+        step = 0.5
+    )
+
+height_m = height / 100
+bmi = weight / (height_m ** 2)
+
+st.caption(
+    f"Calculated BMI: {bmi:.1f} kg/m² (derived from your height and weight)"
+)
     
 # Add predict button
 predict_button = st.button(
@@ -129,7 +152,6 @@ tobacco_map = {
     "Yes": 1
 }
 
-
 if predict_button:
 
     patient_data = pd.DataFrame({
@@ -141,7 +163,8 @@ if predict_button:
         ],
         "tobacco_use": [
             tobacco_map[tobacco_use]
-        ]
+        ],
+        "bmi": [bmi]
     })
 
     risk_probability = (
@@ -163,7 +186,7 @@ if predict_button:
     )
 
     st.metric(
-        "Predicted Risk",
+        "Screening Score",
         f"{risk_probability:.1%}"
     )
 
@@ -193,8 +216,8 @@ if predict_button:
             Your current profile suggests
             lower hypertension risk.
 
-            Continue healthy lifestyle practices
-            and periodic screening.
+            Since a low screening score does not entirely rule out hypertension, 
+            continue healthy lifestyle habits and routine blood pressure checks.
             """
         )
         
@@ -229,10 +252,10 @@ if predict_button:
         # Explanation header
         st.markdown("---")
         st.subheader(
-            "Why was this risk assigned?"
+            "What contributed to this result?"
         )
         st.caption(
-            "Feature contributions generated using SHAP."
+            "These factors had the greatest influence on your screening result."
         )
         
         # Display top factors
@@ -252,7 +275,8 @@ if predict_button:
                 "gender": "Sex",
                 "residence": "Residence",
                 "educational_level": "Education",
-                "tobacco_use": "Tobacco Use"
+                "tobacco_use": "Tobacco Use",
+                "bmi": "Body Mass Index"
             })
         )
 
@@ -323,9 +347,14 @@ if predict_button:
         plt.tight_layout()
 
         st.pyplot(fig)
-
+        
         top_driver = (
-            shap_df.iloc[0]["Feature"]
+            top_features
+            .sort_values(
+                "Absolute",
+                ascending=False
+            )
+            .iloc[0]["Feature"]
         )
 
         st.info(
@@ -343,10 +372,10 @@ if predict_button:
             """
             Elevated Risk
 
-            Your profile exceeds the HyperSense screening threshold.
+            Your result falls within the elevated-risk range identified by HyperSense.
 
             We recommend obtaining a blood pressure measurement
-            from a healthcare facility as soon as practical.
+            from a healthcare facility as soon as possible.
 
             If hypertension is confirmed, discuss appropriate
             lifestyle modifications and treatment options with
@@ -357,5 +386,5 @@ if predict_button:
 st.markdown("---")
 
 st.caption(
-    "HyperSense v1.0 • Educational use only • Not for diagnosis"
+    "HyperSense v1.1 • Screening support tool • Not for clinical diagnosis"
 )
