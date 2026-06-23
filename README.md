@@ -112,8 +112,7 @@ Age dominance is clinically expected and consistent with the epidemiological lit
 
 ## Methodology Notes
 
-**BMI inclusion**
-
+**BMI inclusion:**
 During early model development, BMI was excluded because anthropometric measurements and blood pressure measurements did not fully overlap in the Benin DHS 2017–18 survey. Restricting analysis to participants with complete BMI data reduced the available sample from 20,446 to 7,844 observations (62% reduction), raising concerns about selection bias and loss of statistical power.
 
 As a result, the initial HyperSense deployment (v1.0) prioritised a larger population-representative sample without BMI. Following additional model development and evaluation, BMI has been incorporated into HyperSense v1.1 through a secondary modelling pipeline, enabling more personalised risk assessment while acknowledging the trade-off between feature richness and sample size.
