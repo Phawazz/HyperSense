@@ -34,7 +34,7 @@ Given **age, sex, place of residence, education level, tobacco use, and BMI**, H
 
 ## Why It Was Built
 
-Hypertension affects an estimated **30% of Nigerian adults**, yet fewer than **29% are aware** of their condition. Only 22% receive treatment. With a physician-to-patient ratio of 3.8 per 10,000 — far below the WHO recommendation — clinical screening at scale is neither feasible nor sustainable through the existing health workforce alone.
+Hypertension affects an estimated **38.1% of Nigerian adults (age-standardised)**, yet *only 60%* of those affected are aware of their condition, roughly *a third* receive treatment, and *just 12%* achieve blood pressure control (Odili et al., Glob Heart, 2020 — WHO STEPwise nationwide survey).
 
 Existing risk prediction tools — including the **Framingham Risk Score, ASCVD Pooled Cohort Equations, and ESH/ESC 2018 models** — were derived from predominantly Western cohorts. They may not accurately reflect the epidemiological, dietary, and demographic characteristics of West African populations.
 
