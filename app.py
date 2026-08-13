@@ -83,7 +83,7 @@ with left_col:
         ["Urban", "Rural"]
     )
     
-# Right sid
+# Right side
 with right_col:
 
     educational_level = st.selectbox(
