@@ -177,6 +177,18 @@ Including BMI required restricting training to a substantially smaller complete-
 
 HyperSense v1.1 therefore prioritizes richer individual-level information over maximum sample size. Both approaches have advantages: larger datasets generally improve population representativeness, while BMI-enhanced models may provide more personalized risk assessment.
 
+### Deployment Threshold
+
+For HyperSense v1.1, the deployment threshold was re-derived using a leakage-free procedure based exclusively on the training set. Ten-fold out-of-fold predicted probabilities were generated using the selected XGBoost hyperparameters, with DHS survey weights preserved during model fitting.
+
+The threshold was selected from a prespecified probability grid by maximizing **Youden's index**:
+
+`Youden's J = sensitivity + specificity − 1`
+
+This yielded a deployment threshold of **0.54**, providing a reproducible balance between sensitivity and specificity without using the held-out test set for threshold selection.
+
+At this threshold, final evaluation on the held-out test set produced **77.90% sensitivity, 61.60% specificity, 20.92% PPV, and 95.53% NPV**. The model's ROC-AUC **(~0.79)** is threshold-independent and was unaffected by this threshold correction.
+
 ### Important Note
 
 The HyperSense score remains a screening result, not a diagnosis. Users with elevated screening scores should obtain a blood pressure measurement from a qualified healthcare provider.
